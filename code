@@ -1,0 +1,467 @@
+CREATE DATABASE MyBank
+GO
+USE MyBank
+
+-- ----------------------------------------------------------------------------------------------
+--now it is time creat   tables Customer, CustomerAddress , Card , Account,Disposition ,Loan ,Transaction
+--User, mobilbankId Rosa CustomerService
+--customer is my parent table 
+CREATE TABLE [dbo].[Customer](
+	[CustomerId] INT IDENTITY(1,1) PRIMARY KEY ,
+	[FirstName] NVARCHAR(50) NOT NULL,
+	[LastName] NVARCHAR(50) NOT NULL,
+	[Gender]NVARCHAR(10) NOT NULL,
+	[Birthday] DATETIME NOT NULL,
+	[SocialSecurityNumber] INT NOT NULL,
+	[Email] NVARCHAR(50) NOT NULL,
+	[PhoneNumber] NVARCHAR(20) NOT NULL,
+	[Occupation] NVARCHAR(50) NOT NULL,
+	[MaritalStatus] NVARCHAR(50) NOT NULL,
+    [UserId] INT NOT NULL
+)
+
+-- Table: CustomerAddress:This table stores customer address information and has a foreign key linking to Customer table
+CREATE TABLE [dbo].[CustomerAddress](
+	[CustomerAddressId] INT IDENTITY(1,1)  PRIMARY KEY,
+	[Country] NVARCHAR(50) NOT NULL,
+	[City] NVARCHAR(50) NOT NULL,
+	[Street] NVARCHAR(50) NOT NULL,
+	[ZipCode] NVARCHAR(50) NOT NULL,
+	[CustomerId] INT NOT NULL
+)
+-- Table: Card information 
+CREATE TABLE [dbo].[Card](
+	[CardId] INT IDENTITY(1,1) PRIMARY KEY,
+	[CardNumber] NVARCHAR(50) NOT NULL,
+	[Type] NVARCHAR(20) NOT NULL,
+	[IssuedDate] DATE NOT NULL,
+	[ExpiryMonth] NVARCHAR(10) NOT NULL,
+	[ExpiryYear] NVARCHAR(10) NOT NULL,
+	[Cvv2Code] INT NOT NULL,
+	[colour] NVARCHAR(20) NOT NULL,
+	[DailySpendingLimit] MONEY NULL,-- Indicates the maximum amount a customer can spend in a single day using this card. 
+	[Meesege] NVARCHAR(10) NULL --Regarding the 'Message' field, would customers like to receive notifications or include personalized messages 
+)
+--Table:This table stores account information
+CREATE TABLE [dbo].[Account](
+	[AccountId] INT IDENTITY(1,1) PRIMARY KEY, 
+	[AcountNumber] INT NOT NULL,
+	[Type] NVARCHAR(50) NOT NULL,
+	[Balance] MONEY NOT NULL,
+	[Amount] MONEY NOT NULL,
+	[CreatedDate] DATE NOT NULL
+)
+--Table: This table stores Disposition information
+CREATE TABLE [dbo].[Disposition](
+	[DispositionId] INT IDENTITY(1,1) PRIMARY KEY,
+	[CardId] INT NOT NULL,
+	[CustomerId] INT NOT NULL,
+	[AccountId] INT NOT NULL
+)
+--Table: This table stores Loan information
+CREATE TABLE [dbo].[Loan](
+	[LoanId] INT IDENTITY(1,1)PRIMARY KEY,
+	[Date] DATE NOT NULL,
+	[DurationMonths] INT NOT NULL,
+	[Amount]  MONEY NOT NULL,
+	[Debt]  MONEY NOT NULL,
+	[AccountId] INT NOT NULL
+)
+--Table: This table stores Transaction information
+CREATE TABLE [dbo].[Transaction](
+	[TransactionId] INT IDENTITY(1,1) PRIMARY KEY,
+	[DateOfTrasacation] DATE NOT NULL,
+	[Balance]  MONEY NOT NULL,
+	[Amount] MONEY NOT NULL,
+	[Type] NVARCHAR(50) NOT NULL,
+	[AccountId] INT NOT NULL
+);
+--Table: This table stores UserAccount information
+---- This table is crucial for implementing user authentication and authorization in an online banking system.
+-- It stores information about registered users of the system
+CREATE TABLE [dbo].[UserAccount]
+(
+UserId INT IDENTITY(10,1) PRIMARY KEY,
+UserName NVARCHAR(50) NOT NULL,
+Pasword NVARCHAR(50) NOT NULL,
+DateOfRegistration DATE NOT NULL,-- indicating when user account was created.
+LastLogin DATE NOT NULL
+);
+-- now table for CoustomerService
+CREATE TABLE [dbo].[CustomerService]
+(
+    ServiceID INT  IDENTITY(100,1)PRIMARY KEY,
+    CustomerID INT  NOT NULL,
+    ServiceDate DATE NOT NULL,
+    ServiceCategory NVARCHAR(50) NOT NULL, --ServiceType:Complaint,Technical Support,Account Issue,Feedback,Suggestion
+    ServiceDetails NVARCHAR(200) NOT NULL
+);
+CREATE TABLE [dbo].[MobileBankID]
+(
+    MobileBankID INT IDENTITY(1000,1) PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    MobileBankIDPassword NVARCHAR(20) NOT NULL,
+    RegistrationDate DATE NOT NULL,
+    LastUsed DATE NOT NULL
+);
+CREATE TABLE [dbo].[BankDOSA]
+(
+    BankDOSAID INT IDENTITY(100,1) PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    DOSACode NVARCHAR(20) NOT NULL,
+    RegistrationDate DATE NOT NULL,
+    LastUsed DATE NOT NULL
+);
+CREATE TABLE [dbo].[Fund]
+(
+    FundID INT  IDENTITY(100,1)PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    FundName NVARCHAR(50) NOT NULL,
+    RegistrationDate DATE NOT NULL,
+    FundCategory NVARCHAR(50) NOT NULL, -- type or category  (ex: Stocks, Bonds, Mutual Funds, etc.)
+	FundStatus  NVARCHAR(10) NOT NULL --  current status of fund (ex: Active, Closed, etc.)
+);
+
+CREATE TABLE Employees 
+(
+    EmployeeID INT IDENTITY(100, 1) PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    Gender NVARCHAR(10) NOT NULL,
+    DateOfBirth DATE  NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+    PhoneNumber NVARCHAR(20) NOT NULL,
+    HireDate DATE NOT NULL,
+    Position NVARCHAR(50) NOT NULL,
+    Salary DECIMAL (18, 2) NOT NULL,
+	OfficeId INT NOT NULL,
+	UserId INT NOT NULL
+);
+
+CREATE TABLE dbo.Office
+(
+OfficeId INT IDENTITY(1, 1) PRIMARY KEY,
+OfficeName  NVARCHAR (50)  NOT NULL,
+OfficePhoneNumber   NVARCHAR (20)  NOT NULL,
+OfficeEmail   NVARCHAR (100)  NOT NULL,
+OfficeStreetName  NVARCHAR (50)  NOT NULL,
+OfficeCity  NVARCHAR (50)  NOT NULL,
+OfficeZipCode NVARCHAR(50)  NOT NULL
+)
+--now for makeing relationship 
+--number one between CustomerAddress and Customer
+
+ALTER TABLE[dbo].[CustomerAddress]  WITH CHECK ADD  CONSTRAINT  FK_CustomerAddress_Customer FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customer]  ([CustomerId]);
+GO
+ALTER TABLE [dbo].[CustomerAddress] CHECK CONSTRAINT  FK_CustomerAddress_Customer
+GO
+-- seconde relationship is in loan between loan and Account
+
+ALTER TABLE[dbo].[Loan]  WITH CHECK ADD  CONSTRAINT FK_Loan_Account FOREIGN KEY([AccountId]) 
+REFERENCES [dbo].[Account]  ([AccountId]);
+GO
+ALTER TABLE [dbo].[Loan] CHECK CONSTRAINT  FK_Loan_Account
+GO
+-- Third relationship is between  loan between Transaction and Account
+
+ALTER TABLE [dbo].[Transaction] WITH CHECK ADD  CONSTRAINT FK_Transaction_Account FOREIGN KEY([AccountId]) 
+REFERENCES [dbo].[Account]  ([AccountId]);
+GO
+ALTER TABLE [dbo].[Transaction] CHECK CONSTRAINT  FK_Transaction_Account
+GO
+
+-- Forth relationship is between [dbo].[Disposition] and card , Customer and Account
+--1.relationship is between loan and Disposition
+ALTER TABLE [dbo].[Disposition] WITH CHECK ADD  CONSTRAINT FK_Disposition_Card FOREIGN KEY([CardId]) 
+REFERENCES[dbo].[Card]  ([CardId]);
+GO
+ALTER TABLE [dbo].[Disposition] CHECK CONSTRAINT  FK_Disposition_Card
+GO
+--2.relationship is between Customer and Disposition
+ALTER TABLE [dbo].[Disposition] WITH CHECK ADD  CONSTRAINT FK_Disposition_Customer FOREIGN KEY([CustomerId]) 
+REFERENCES[dbo].[Customer] ([CustomerId]);
+GO
+ALTER TABLE [dbo].[Disposition] CHECK CONSTRAINT  FK_Disposition_Customer
+GO
+--3.relationship is between Account and Disposition
+
+ALTER TABLE [dbo].[Disposition] WITH CHECK ADD  CONSTRAINT FK_Disposition_Account FOREIGN KEY([AccountId]) 
+REFERENCES[dbo].[Account]  ([AccountId]);
+GO
+ALTER TABLE [dbo].[Disposition] CHECK CONSTRAINT  FK_Disposition_Account
+GO
+
+--Fifth relationship is between UserAccount and Customer 
+
+-- Add UserId as a foreign key in Customer table 
+--This one should be different because i want one to one relationship.
+ALTER TABLE [dbo].[Customer]  ADD CONSTRAINT FK_Customer_UserAccount  FOREIGN KEY([UserId]) 
+REFERENCES [dbo].[UserAccount]([UserId]);
+
+--Make UserId a unique constraint in Customer table
+ALTER TABLE [dbo].[Customer]
+ADD CONSTRAINT UQ_UserId UNIQUE(UserId);
+
+--One to one relationshib between BankDOSA and Customer
+ALTER TABLE [dbo].[BankDOSA]  ADD CONSTRAINT FK_BankDOSA_Customer  FOREIGN KEY([CustomerID]) 
+REFERENCES [dbo].[Customer]([CustomerID]);
+
+-- Make CustomerID a unique constraint in BankDOSA table
+ALTER TABLE [dbo].[BankDOSA]
+ADD CONSTRAINT UQ_CustomerID UNIQUE(CustomerID);
+
+--one to one relationshib between Mobile Bank Id and Customer
+ALTER TABLE  [dbo].[MobileBankID] ADD CONSTRAINT FK_MobileBankID_Customer  FOREIGN KEY([CustomerID]) 
+REFERENCES [dbo].[Customer]([CustomerID]);
+
+-- Make CustomerID a unique constraint in BankDOSA table
+ALTER TABLE[dbo].[MobileBankID]
+ADD CONSTRAINT UQ1_CustomerID UNIQUE(CustomerID);
+
+--one to many relationshib between Customer table is the "one" side and CustomerService table is the "many" side
+
+ALTER TABLE[dbo].[CustomerService]  WITH CHECK ADD  CONSTRAINT  FK_CustomerService_Customer FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customer]  ([CustomerId]);
+GO
+ALTER TABLE [dbo].[CustomerService] CHECK CONSTRAINT  FK_CustomerService_Customer
+GO
+
+--one to many relationshib between Customer table is the "one" side and Fund table is the "many" side
+
+ALTER TABLE [dbo].[Fund] WITH CHECK ADD  CONSTRAINT  FK_Fund_Customer FOREIGN KEY([CustomerId])
+REFERENCES [dbo].[Customer]  ([CustomerId]);
+GO
+ALTER TABLE [dbo].[Fund]CHECK CONSTRAINT  FK_Fund_Customer
+GO
+
+--one to one relationshib between User Id and employee
+ALTER TABLE [dbo].[Employees] ADD CONSTRAINT FK_Employees_UserAccount   FOREIGN KEY([UserId]) 
+REFERENCES [dbo].[UserAccount ]([UserId]);
+GO
+
+-- Make User a unique constraint in employee table
+ALTER TABLE [dbo].[Employees]
+ADD CONSTRAINT UQ2_UserId UNIQUE(UserId);
+
+--one to many relationshib between [Employees][Office]
+
+ALTER TABLE [dbo].[Employees] WITH CHECK ADD  CONSTRAINT  FK_Employees_Office FOREIGN KEY ([OfficeId])
+REFERENCES  [dbo].[Office] ([OfficeId]);
+GO
+ALTER TABLE [dbo].[Employees] CHECK CONSTRAINT  FK_Employees_Office
+GO
+
+
+-- Insert data for UserAccount
+
+INSERT INTO [dbo].[UserAccount] ([UserName], [Pasword], [DateOfRegistration], [LastLogin])
+VALUES
+('anitabijari', 'Anita_1', '2023-09-25', '2023-09-25'),
+('DavolioNancy', 'DavolioNancy_2', '2023-09-25', '2023-09-25'),
+('Andrew_Fuller', 'hndrew_Fuller_3', '2023-09-26', '2023-09-26'),
+('Janet_lev', 'Janet_lev_4', '2023-09-26', '2023-09-26'),
+('noemail', 'noemail_5', '2023-09-27', '2023-09-27'),
+('BuchananSteve', 'BuchananSteve_6', '2023-09-27', '2023-09-27'),
+('SuyamaMichael', 'hasSuyamaMichael_7', '2023-09-28', '2023-09-28'),
+('KingRobert', 'hashed_password_8', '2023-09-28', '2023-09-28'),
+('callloura', 'KingRobert_9', '2023-09-29', '2023-09-29'),
+('annedod', 'annedod_10', '2023-09-29', '2023-09-29')
+
+
+INSERT INTO [dbo].[Customer]
+([FirstName],[LastName],[Gender],[Birthday],[SocialSecurityNumber],[Email],[PhoneNumber],[Occupation],[MaritalStatus],[UserId])
+VALUES
+('Anita', 'Bijari', 'MS', '1987-06-21 00:00:00.000', 870621, 'anitabijari@gmail.com', '707470113', 'Teacher', 'Single',10),
+('Davolio', 'Nancy', 'Ms', '1948-12-08 00:00:00.000', 19481208, 'DavolioNancy@gmail.com', '2065559857', 'Electrician', 'Married',11),
+('Andrew', 'Fuller', 'Mr', '1952-02-19 00:00:00.000', 19520219, 'Andrew_Fuller@gmail.com', '2065559482', 'Data Analyst', 'Divorced',12),
+('Janet', 'Leverling', 'Ms', '1963-08-30 00:00:00.000', 19630830, 'Janet_lev@hotmail.com', '2065558122', 'Chef', 'Single',13),
+('Margaret', 'Peacock', 'Mrs', '1937-09-19 00:00:00.000', 19370919, 'noemail@example.com', '2065558122', 'Civil Engineer', 'Divorced',14),
+('Steven', 'Buchanan', 'Mr', '1955-03-04 00:00:00.000', 19550304, 'BuchananSteve@gmail.com', '715554848', 'Software Developer', 'Divorced',15),
+('Michael', 'Suyama', 'Mr', '1963-07-02 00:00:00.000', 19630702, 'SuyamaMichael@gmail.com', '715557773', 'Police', 'Married',16),
+('Robert', 'King', 'Mr', '1960-05-29 00:00:00.000', 19600529, 'KingRobert@hotmail.com', '715555598', 'Therapist', 'Single',17),
+('Callahan', 'Laura', 'Ms', '1958-01-09 00:00:00.000', 19580109, 'callloura@gmail.com', '2065551189', 'Pharmacist', 'Married',18),
+('Dodsworth', 'Anne', 'Ms', '1966-01-27 00:00:00.000', 19660127, 'annedod@gmail.com', '715554444', 'Manager', 'Single',19)
+
+INSERT INTO [dbo].[Card]
+([CardNumber],[Type],[IssuedDate],[ExpiryMonth],[ExpiryYear],[Cvv2Code],[Colour],[DailySpendingLimit])
+VALUES
+('2547456565946351', 'Debit', '2020-02-20', 'March', '2025', 254, 'blue',  250.00),
+('25412598756452315', 'Credit', '2019-02-21', 'June', '2024', 756, 'green', 500.00),
+('9874456123698521', 'Debit', '2018-05-21', 'July', '2023', 789, 'Red', NULL),
+('2554154623653264', 'Credit', '2023-04-08', 'April', '2027', 147, 'Blue',  2500.00),
+('2145222536456665', 'Credit', '2022-05-05', 'July', '2026', 456, 'Gold',  120.00),
+('5544556699663547', 'Credit', '2023-05-05', 'May', '2027', 478, 'Silver',  150.00),
+('25816655456985471236', 'Credit', '2017-09-08', 'November', '2022', 654, 'Gold', 1000.00),
+('2211225566779984', 'Debit', '2018-10-10', 'October', '2023', 145, 'Silver',  NULL),
+('2165665598746547', 'Credit', '2019-11-18', 'November', '2024', 147, 'Red', 1250.00),
+('54875544954455556498', 'Debit', '2017-12-29', 'December', '2023', 459, 'Silver', 100.00)
+
+
+
+
+INSERT INTO [dbo].[Account]
+([AcountNumber] , [Type], [Balance], [Amount], [CreatedDate])
+VALUES
+(545469813, 'Savings Account', 2500.00, 200.00, '2002-12-20'),
+(955566465, 'Checking Account', 9000.00, 1200.00, '2006-05-30'),
+(159875633, 'Certificate of Deposit (CD)', 22500.00, 3500.00, '2012-05-06'),
+(216546469, 'Money Market Account', 250000.00, 5500.00, '2003-02-08'),
+(326569852, 'Individual Retirement Account (IRA)', 5500.00, 200.00, '2014-05-12'),
+(213232312, 'Joint Account', 890000.00, 6500.00, '2010-04-07'),
+(698745213, 'Business Account', 1200000000.00, 580000.00, '2013-05-08'),
+(265986126, 'Business Account', 2500000.00, 2300.00, '2009-05-09'),
+(112233665, 'Foreign Currency Account', 500.00, 100.00, '2020-02-05'),
+(123654795, 'Trust Account', 21000.00, 1200.00, '2016-09-05')
+
+INSERT INTO [dbo].[CustomerAddress]
+([Country],[City],[Street],[ZipCode],[CustomerId])
+VALUES
+('Sweden', 'Stochkolm', 'langelandsgatan22', '16443', 1),
+('USA', 'Seattle', '507 - 20th Ave. E. Apt. 2A', '98122',2),
+('USA', 'Tacoma', 'WA', '98401', 3),
+('USA', 'Kirkland', '722 Moss Bay Blvd.', '98033', 4),
+('USA', 'Redmond', '4110 Old Redmond Rd.', '98052', 5),
+('UK', 'London', '14 Garrett', 'SW1 8JR', 6),
+('UK', 'London', 'Coventry House Miner Rd.', 'EC2 7JR', 7),
+('UK', 'London', 'Edgeham Hollow Winchester Way', 'RG1 9SP', 8),
+('USA', 'Seattle', '4726 - 11th Ave. N.E.', '98105', 9),
+('UK', 'London', '7 Houndstooth Rd.', 'WG2 7LT',10)
+  
+
+
+  INSERT INTO [dbo].[Loan]
+([Date],[DurationMonths],[Amount],[Debt],[AccountId])
+VALUES
+('2020-02-12', 36, 50000.00, 25000.00, 1),
+('2019-05-28', 32, 65000.00, 9000.00, 2),
+('2018-05-08', 21, 5000.00, 250.00, 3),
+('2017-04-07', 5, 45000.00, 500.00, 4),
+('2019-05-30', 8, 65000.00, 1000.00, 5),
+('2022-09-12', 29, 87000.00, 65000.00, 6),
+('2020-05-07', 40, 25000000.00, 54000.00, 7),
+('2023-05-01', 21, 25000.00, 24000.00, 8),
+('2021-05-08', 14, 52000.00, 4500.00, 9),
+('2020-04-07', 12, 25000.00, 7100.00, 10)
+
+INSERT INTO [dbo].[Transaction]
+([DateOfTrasacation],[Balance],[Amount],[Type],[AccountId])
+VALUES
+('2020-09-07', 2500.00, 100.00, 'Withdrawal', 1),
+('2021-12-27', 54000.00, 8500.00, 'Withdrawal', 2),
+('2018-07-30', 71000.00, 5411.00, 'Withdrawal', 3),
+('2019-09-18', 8400.00, 1544.00, 'Deposit', 4),
+('2023-09-10', 250.00, 100.00, 'Deposit', 5),
+('2021-09-08', 15000.00, 1200.00, 'Deposit', 6),
+('2020-02-02', 1400.00, 1250.00, 'Deposit', 7),
+('2022-01-14', 5000.00, 1000.00, 'Withdrawal', 8),
+('2020-11-11', 2000.00, 200.00, 'Withdrawal', 9),
+('2017-01-28', 50000.00, 2000.00, 'Deposit', 10)
+
+-- Insert data for Disposition
+INSERT INTO [dbo].[Disposition]
+([CardId],[CustomerId],[AccountId])
+VALUES
+(1, 1, 1),
+(2, 2, 2),
+(3, 3, 3),
+(4, 4, 4),
+(5, 5, 5),
+(6, 6, 6),
+(7, 7, 7),
+(8, 8, 8),
+(9, 9, 9),
+(10, 10, 10)
+-- Insert data for UserAccount
+
+INSERT INTO [dbo].[UserAccount] ([UserName], [Pasword], [DateOfRegistration], [LastLogin])
+VALUES
+('anitabijari', 'Anita_1', '2023-09-25', '2023-09-25'),
+('DavolioNancy', 'DavolioNancy_2', '2023-09-25', '2023-09-25'),
+('Andrew_Fuller', 'hndrew_Fuller_3', '2023-09-26', '2023-09-26'),
+('Janet_lev', 'Janet_lev_4', '2023-09-26', '2023-09-26'),
+('noemail', 'noemail_5', '2023-09-27', '2023-09-27'),
+('BuchananSteve', 'BuchananSteve_6', '2023-09-27', '2023-09-27'),
+('SuyamaMichael', 'hasSuyamaMichael_7', '2023-09-28', '2023-09-28'),
+('KingRobert', 'hashed_password_8', '2023-09-28', '2023-09-28'),
+('callloura', 'KingRobert_9', '2023-09-29', '2023-09-29'),
+('annedod', 'annedod_10', '2023-09-29', '2023-09-29')
+
+-- Insert data for CustomerService
+INSERT INTO [dbo].[CustomerService] (CustomerID, ServiceDate, ServiceCategory, ServiceDetails)
+VALUES
+(1, '2002-05-15', 'Technical Support', 'Unable to log in to the mobile app.'),
+(2, '2005-12-24', 'Complaint', 'Unauthorised charges on my account.'),
+(3, '2008-09-10', 'Feedback', 'I really appreciate the assistance provided.'),
+(4, '2003-07-28', 'Technical Support', 'Issues with transferring funds.'),
+(5, '2004-09-03', 'Account Issue', 'Cannot view recent transactions.'),
+(6, '2000-10-22', 'Suggestion', 'Please add more features to the app.'),
+(7, '2007-11-14', 'Complaint', 'Unresolved issue with my account balance.'),
+(8, '2010-02-28', 'Feedback', 'The customer service representative was very helpful.'),
+(9, '2009-04-10', 'Technical Support', 'Problems with setting up mobile banking.'),
+(10, '2001-06-06', 'Feedback', 'The app is user-friendly and easy to navigate.');
+
+-- Insert data for MobileBankID
+INSERT INTO [dbo].[MobileBankID] (CustomerID, MobileBankIDPassword, RegistrationDate, LastUsed)
+VALUES
+(1, 'Mobile123', '2008-05-15', '2008-05-16'),
+(2, 'Banking456', '1999-12-24', '1999-12-25'),
+(3, 'Secure789', '2005-09-10', '2005-09-11'),
+(4, 'DOSA321', '2000-07-03', '2000-07-04'),
+(5, 'Access777', '1998-11-20', '1998-11-21'),
+(6, 'Code999', '2003-03-12', '2003-03-13'),
+(7, 'SafeBank456', '2006-08-30', '2006-08-31'),
+(8, 'Auth123', '2010-02-28', '2010-03-01'),
+(9, 'KeyPass345', '2004-04-18', '2004-04-19'),
+(10, 'SecureDOSA11', '2002-06-06', '2002-06-07');
+
+-- Insert data for BankDOSA
+INSERT INTO [dbo].[BankDOSA] (CustomerID, DOSACode, RegistrationDate, LastUsed)
+VALUES
+(1, 'ABC123', '1999-10-11', '1999-10-12'),
+(2, 'DEF456', '2001-04-05', '2001-04-06'),
+(3, 'GHI789', '2009-07-29', '2009-07-30'),
+(4, 'JKL321', '2012-01-17', '2012-01-18'),
+(5, 'MNO777', '2000-09-03', '2000-09-04'),
+(6, 'PQR999', '2007-12-22', '2007-12-23'),
+(7, 'STU456', '2008-06-14', '2008-06-15'),
+(8, 'VWX123', '2006-10-28', '2006-10-29'),
+(9, 'YZ345', '2003-02-09', '2003-02-10'),
+(10, 'DOSA11', '2004-05-27', '2004-05-28');
+
+INSERT INTO [dbo].[Fund] (CustomerID, FundName, RegistrationDate, FundCategory, FundStatus)
+VALUES
+(1, 'Stocks Portfolio', '2005-08-10', 'Stocks', 'Active'),
+(2, 'Bonds Investment', '2007-03-22', 'Bonds', 'Active'),
+(3, 'Retirement Fund', '2009-12-05', 'Mutual Funds', 'Active'),
+(4, 'Real Estate Trust', '2003-06-18', 'Real Estate', 'Closed'),
+(5, 'Tech Startups', '2006-09-30', 'Equity Investments', 'Active'),
+(6, 'Government Bonds', '2008-11-14', 'Bonds', 'Active'),
+(7, 'Diversified Portfolio', '2010-02-28', 'Diverse Investments', 'Active'),
+(8, 'Precious Metals', '2004-07-08', 'Commodities', 'Active'),
+(9, 'Healthcare Ventures', '2001-09-21', 'Equity Investments', 'Closed'),
+(10, 'Sustainable Energy', '2002-11-03', 'Alternative Investments', 'Active');
+
+
+-- Insert data into the Office table
+INSERT INTO dbo.Office (OfficeName, OfficePhoneNumber, OfficeEmail, OfficeStreetName, OfficeCity, OfficeZipCode)
+VALUES 
+    ('Stockhime Office', '123-456-7890', 'Stockhimeoffice@Gmail.com', '123 Main Street', 'Cityville', '12345'),
+    ('kista Office 1', '987-654-3210', 'kista @gmail.com', '456 Elm Avenue', 'Townsville', '54321'),
+    ('solna Office 2', '555-555-5555', 'solna@gmail.com', '789 Oak Drive', 'Villagetown', '67890'),
+    ('täby Office 3', '111-111-1111', 'täby@hotmail.com', '101 Pine Lane', 'Hamletville', '11111');
+-- Insert data into the Employees table
+
+INSERT INTO Employees (FirstName, LastName, Gender, DateOfBirth, Email, PhoneNumber, HireDate, Position, Salary, OfficeId, UserId)
+VALUES
+    ('John', 'Doe', 'Male', '1980-05-15', 'john.doe@Gmail.com', '555-1234', '2005-03-20', 'Manager', 75000.00, 1, 10),
+    ('Jane', 'Doe', 'Female', '1982-08-25', 'jane.doe@Hotmail.com', '555-5678', '2007-11-10', 'Supervisor', 60000.00, 2, 11),
+    ('Bob', 'Smith', 'Male', '1975-10-10', 'bob.smith@Gmail.com', '555-9876', '2003-09-05', 'Analyst', 55000.00, 1, 12),
+    ('Alice', 'Johnson', 'Female', '1988-03-03', 'alice.johnson@Hotmail.com', '555-7890', '2010-06-15', 'Developer', 65000.00, 3, 13),
+    ('Mike', 'Brown', 'Male', '1990-12-20', 'mike.brown@Gmail.com', '555-2345', '2012-04-30', 'Assistant', 45000.00, 2, 14),
+    ('Chris', 'Davis', 'Male', '1987-07-07', 'chris.davis@Hotmail.com', '555-3456', '2014-09-22', 'Analyst', 60000.00, 4, 15),
+    ('Sarah', 'Wilson', 'Female', '1993-02-14', 'sarah.wilson@Gmail.com', '555-4567', '2016-12-01', 'Developer', 70000.00, 2, 16),
+    ('Alex', 'Johnson', 'Male', '1978-11-30', 'alex.johnson@Hotmail.com', '555-5678', '2009-05-10', 'Manager', 80000.00, 3, 17),
+    ('Emily', 'Smith', 'Female', '1985-09-12', 'emily.smith@Gmail.com', '555-6789', '2011-02-18', 'Supervisor', 65000.00, 1, 18),
+    ('Ryan', 'Brown', 'Male', '1982-03-25', 'ryan.brown@Hotmail.com', '555-7890', '2013-08-03', 'Assistant', 50000.00, 3, 19);
+
